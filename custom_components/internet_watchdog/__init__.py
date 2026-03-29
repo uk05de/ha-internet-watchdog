@@ -4,8 +4,6 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 
-import aiohttp
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
@@ -13,16 +11,18 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     DOMAIN,
-    CONF_FRITZBOX_URL,
+    CONF_FRITZBOX_IP,
     CONF_SWITCH_ENTITY,
     CONF_CHECK_INTERVAL,
     CONF_FAILURE_THRESHOLD,
     CONF_COOLDOWN,
     CONF_MAX_RESTARTS,
+    CONF_RETRY_PAUSE,
     DEFAULT_CHECK_INTERVAL,
     DEFAULT_FAILURE_THRESHOLD,
     DEFAULT_COOLDOWN,
     DEFAULT_MAX_RESTARTS,
+    DEFAULT_RETRY_PAUSE,
     INTERNET_CHECK_TARGETS,
 )
 
@@ -75,20 +75,6 @@ async def _check_tcp(host: str, port: int, timeout: float = 5.0) -> bool:
         return False
 
 
-async def _check_url(url: str, timeout: float = 10.0) -> bool:
-    """Check if a URL is reachable via HTTP HEAD request."""
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.head(
-                url,
-                timeout=aiohttp.ClientTimeout(total=timeout),
-                ssl=False,
-            ) as resp:
-                return resp.status < 500
-    except Exception:
-        return False
-
-
 class WatchdogCoordinator:
     """Monitors connectivity and triggers restart when needed."""
 
@@ -103,14 +89,16 @@ class WatchdogCoordinator:
         self._last_restart: datetime | None = None
         self._in_cooldown = False
         self._cooldown_until: datetime | None = None
+        self._in_retry_pause = False
+        self._retry_pause_until: datetime | None = None
         self._auto_restart_enabled = True
         self._consecutive_restarts = 0
         self._unsub_timer = None
         self._listeners: list[callback] = []
 
     @property
-    def fritzbox_url(self) -> str:
-        return self.entry.options.get(CONF_FRITZBOX_URL, "")
+    def fritzbox_ip(self) -> str:
+        return self.entry.options.get(CONF_FRITZBOX_IP, "")
 
     @property
     def switch_entity(self) -> str:
@@ -131,6 +119,10 @@ class WatchdogCoordinator:
     @property
     def max_restarts(self) -> int:
         return self.entry.options.get(CONF_MAX_RESTARTS, DEFAULT_MAX_RESTARTS)
+
+    @property
+    def retry_pause(self) -> int:
+        return self.entry.options.get(CONF_RETRY_PAUSE, DEFAULT_RETRY_PAUSE)
 
     @property
     def internet_connected(self) -> bool:
@@ -159,6 +151,10 @@ class WatchdogCoordinator:
     @property
     def in_cooldown(self) -> bool:
         return self._in_cooldown
+
+    @property
+    def in_retry_pause(self) -> bool:
+        return self._in_retry_pause
 
     def set_auto_restart(self, enabled: bool) -> None:
         """Toggle auto-restart."""
@@ -193,8 +189,8 @@ class WatchdogCoordinator:
         # Run first check immediately
         self.hass.async_create_task(self._async_check())
         log.info(
-            "Internet Watchdog started (interval=%ds, threshold=%d, cooldown=%ds)",
-            self.check_interval, self.failure_threshold, self.cooldown,
+            "Internet Watchdog started (interval=%ds, threshold=%d, cooldown=%ds, retry_pause=%ds)",
+            self.check_interval, self.failure_threshold, self.cooldown, self.retry_pause,
         )
 
     async def async_stop(self) -> None:
@@ -206,14 +202,25 @@ class WatchdogCoordinator:
 
     async def _async_check(self, now=None) -> None:
         """Check connectivity and trigger restart if needed."""
+        now_utc = dt_util.utcnow()
+
         # Skip checks during cooldown
         if self._in_cooldown:
-            if self._cooldown_until and dt_util.utcnow() < self._cooldown_until:
-                log.debug("In cooldown until %s, skipping check", self._cooldown_until)
+            if self._cooldown_until and now_utc < self._cooldown_until:
                 return
             self._in_cooldown = False
             self._cooldown_until = None
             log.info("Cooldown ended, resuming checks")
+
+        # Handle retry pause (after max restarts exhausted)
+        if self._in_retry_pause:
+            if self._retry_pause_until and now_utc < self._retry_pause_until:
+                return
+            self._in_retry_pause = False
+            self._retry_pause_until = None
+            self._consecutive_restarts = 0
+            self._consecutive_failures = 0
+            log.info("Retry pause ended, resuming auto-restart attempts")
 
         # Check internet via TCP to DNS servers
         results = await asyncio.gather(
@@ -221,10 +228,10 @@ class WatchdogCoordinator:
         )
         internet_ok = any(results)
 
-        # Check FritzBox URL
+        # Check FritzBox via TCP to port 80
         fritzbox_ok = True
-        if self.fritzbox_url:
-            fritzbox_ok = await _check_url(self.fritzbox_url)
+        if self.fritzbox_ip:
+            fritzbox_ok = await _check_tcp(self.fritzbox_ip, 80)
 
         self._internet_connected = internet_ok
         self._fritzbox_reachable = fritzbox_ok
@@ -247,15 +254,17 @@ class WatchdogCoordinator:
             if (
                 self._auto_restart_enabled
                 and self._consecutive_failures >= self.failure_threshold
-                and self._consecutive_restarts < self.max_restarts
             ):
-                await self.async_trigger_restart()
-
-            elif self._consecutive_restarts >= self.max_restarts:
-                if self._consecutive_failures == self.failure_threshold:
+                if self._consecutive_restarts < self.max_restarts:
+                    await self.async_trigger_restart()
+                elif self._consecutive_restarts == self.max_restarts:
+                    # Enter retry pause
+                    self._in_retry_pause = True
+                    self._retry_pause_until = now_utc + timedelta(seconds=self.retry_pause)
+                    self._consecutive_restarts += 1  # prevent re-entering this branch
                     log.warning(
-                        "Max restarts (%d) reached — stopping auto-restart until connection recovers",
-                        self.max_restarts,
+                        "Max restarts (%d) reached — pausing for %ds before retrying",
+                        self.max_restarts, self.retry_pause,
                     )
 
         self._notify_listeners()
@@ -288,7 +297,7 @@ class WatchdogCoordinator:
         self._cooldown_until = dt_util.utcnow() + timedelta(seconds=self.cooldown)
 
         log.warning(
-            "FritzBox restart #%d triggered — cooldown %ds",
-            self._restart_count, self.cooldown,
+            "FritzBox restart #%d triggered (attempt %d/%d) — cooldown %ds",
+            self._restart_count, self._consecutive_restarts, self.max_restarts, self.cooldown,
         )
         self._notify_listeners()

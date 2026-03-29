@@ -8,17 +8,19 @@ from homeassistant.helpers import selector
 
 from .const import (
     DOMAIN,
-    CONF_FRITZBOX_URL,
+    CONF_FRITZBOX_IP,
     CONF_SWITCH_ENTITY,
     CONF_CHECK_INTERVAL,
     CONF_FAILURE_THRESHOLD,
     CONF_COOLDOWN,
     CONF_MAX_RESTARTS,
-    DEFAULT_FRITZBOX_URL,
+    CONF_RETRY_PAUSE,
+    DEFAULT_FRITZBOX_IP,
     DEFAULT_CHECK_INTERVAL,
     DEFAULT_FAILURE_THRESHOLD,
     DEFAULT_COOLDOWN,
     DEFAULT_MAX_RESTARTS,
+    DEFAULT_RETRY_PAUSE,
 )
 
 
@@ -37,19 +39,20 @@ class InternetWatchdogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 title="Internet Watchdog",
                 data={},
                 options={
-                    CONF_FRITZBOX_URL: user_input[CONF_FRITZBOX_URL],
+                    CONF_FRITZBOX_IP: user_input[CONF_FRITZBOX_IP],
                     CONF_SWITCH_ENTITY: user_input[CONF_SWITCH_ENTITY],
                     CONF_CHECK_INTERVAL: user_input.get(CONF_CHECK_INTERVAL, DEFAULT_CHECK_INTERVAL),
                     CONF_FAILURE_THRESHOLD: user_input.get(CONF_FAILURE_THRESHOLD, DEFAULT_FAILURE_THRESHOLD),
                     CONF_COOLDOWN: user_input.get(CONF_COOLDOWN, DEFAULT_COOLDOWN),
                     CONF_MAX_RESTARTS: user_input.get(CONF_MAX_RESTARTS, DEFAULT_MAX_RESTARTS),
+                    CONF_RETRY_PAUSE: user_input.get(CONF_RETRY_PAUSE, DEFAULT_RETRY_PAUSE),
                 },
             )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({
-                vol.Required(CONF_FRITZBOX_URL, default=DEFAULT_FRITZBOX_URL): str,
+                vol.Required(CONF_FRITZBOX_IP, default=DEFAULT_FRITZBOX_IP): str,
                 vol.Required(CONF_SWITCH_ENTITY): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain="switch"),
                 ),
@@ -64,6 +67,9 @@ class InternetWatchdogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
                 vol.Optional(CONF_MAX_RESTARTS, default=DEFAULT_MAX_RESTARTS): vol.All(
                     vol.Coerce(int), vol.Range(min=1, max=10),
+                ),
+                vol.Optional(CONF_RETRY_PAUSE, default=DEFAULT_RETRY_PAUSE): vol.All(
+                    vol.Coerce(int), vol.Range(min=300, max=86400),
                 ),
             }),
         )
@@ -91,8 +97,8 @@ class InternetWatchdogOptionsFlow(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema({
                 vol.Required(
-                    CONF_FRITZBOX_URL,
-                    default=opts.get(CONF_FRITZBOX_URL, DEFAULT_FRITZBOX_URL),
+                    CONF_FRITZBOX_IP,
+                    default=opts.get(CONF_FRITZBOX_IP, DEFAULT_FRITZBOX_IP),
                 ): str,
                 vol.Required(
                     CONF_SWITCH_ENTITY,
@@ -116,5 +122,9 @@ class InternetWatchdogOptionsFlow(config_entries.OptionsFlow):
                     CONF_MAX_RESTARTS,
                     default=opts.get(CONF_MAX_RESTARTS, DEFAULT_MAX_RESTARTS),
                 ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
+                vol.Optional(
+                    CONF_RETRY_PAUSE,
+                    default=opts.get(CONF_RETRY_PAUSE, DEFAULT_RETRY_PAUSE),
+                ): vol.All(vol.Coerce(int), vol.Range(min=300, max=86400)),
             }),
         )

@@ -27,7 +27,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = [InternetConnectivitySensor(coordinator)]
-    if coordinator.fritzbox_url:
+    if coordinator.fritzbox_ip:
         entities.append(FritzBoxReachabilitySensor(coordinator))
 
     async_add_entities(entities)
@@ -102,5 +102,5 @@ class FritzBoxReachabilitySensor(BinarySensorEntity):
     @property
     def extra_state_attributes(self) -> dict:
         return {
-            "fritzbox_url": self._coordinator.fritzbox_url,
+            "fritzbox_ip": self._coordinator.fritzbox_ip,
         }
