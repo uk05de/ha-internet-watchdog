@@ -1,0 +1,12 @@
+{
+  "domain": "connection_watchdog",
+  "name": "Connection Watchdog",
+  "codeowners": ["@uk05de"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/uk05de/ha-internet-watchdog",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/uk05de/ha-internet-watchdog/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}
