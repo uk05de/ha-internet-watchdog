@@ -1,4 +1,4 @@
-"""Connection Watchdog integration — monitors internet/FritzBox and triggers restart via Shelly."""
+"""Internet Watchdog integration — monitors internet/FritzBox and triggers restart via Shelly."""
 
 import asyncio
 import logging
@@ -32,7 +32,7 @@ PLATFORMS = ["binary_sensor", "sensor", "button", "switch"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Connection Watchdog from a config entry."""
+    """Set up Internet Watchdog from a config entry."""
     coordinator = WatchdogCoordinator(hass, entry)
 
     hass.data.setdefault(DOMAIN, {})
@@ -193,7 +193,7 @@ class WatchdogCoordinator:
         # Run first check immediately
         self.hass.async_create_task(self._async_check())
         log.info(
-            "Connection Watchdog started (interval=%ds, threshold=%d, cooldown=%ds)",
+            "Internet Watchdog started (interval=%ds, threshold=%d, cooldown=%ds)",
             self.check_interval, self.failure_threshold, self.cooldown,
         )
 
@@ -202,7 +202,7 @@ class WatchdogCoordinator:
         if self._unsub_timer:
             self._unsub_timer()
             self._unsub_timer = None
-        log.info("Connection Watchdog stopped")
+        log.info("Internet Watchdog stopped")
 
     async def _async_check(self, now=None) -> None:
         """Check connectivity and trigger restart if needed."""

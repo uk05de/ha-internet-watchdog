@@ -1,4 +1,4 @@
-"""Config flow for Connection Watchdog."""
+"""Config flow for Internet Watchdog."""
 
 import voluptuous as vol
 
@@ -22,8 +22,8 @@ from .const import (
 )
 
 
-class ConnectionWatchdogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Connection Watchdog."""
+class InternetWatchdogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Internet Watchdog."""
 
     VERSION = 1
 
@@ -34,7 +34,7 @@ class ConnectionWatchdogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
-                title="Connection Watchdog",
+                title="Internet Watchdog",
                 data={},
                 options={
                     CONF_FRITZBOX_URL: user_input[CONF_FRITZBOX_URL],
@@ -71,10 +71,10 @@ class ConnectionWatchdogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
-        return ConnectionWatchdogOptionsFlow(config_entry)
+        return InternetWatchdogOptionsFlow(config_entry)
 
 
-class ConnectionWatchdogOptionsFlow(config_entries.OptionsFlow):
+class InternetWatchdogOptionsFlow(config_entries.OptionsFlow):
     """Handle options flow."""
 
     def __init__(self, config_entry):

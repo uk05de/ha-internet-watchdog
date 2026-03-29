@@ -1,4 +1,4 @@
-"""Button platform for Connection Watchdog."""
+"""Button platform for Internet Watchdog."""
 
 import logging
 
@@ -12,8 +12,8 @@ from .const import DOMAIN
 log = logging.getLogger(__name__)
 
 DEVICE_INFO = {
-    "identifiers": {(DOMAIN, "connection_watchdog")},
-    "name": "Connection Watchdog",
+    "identifiers": {(DOMAIN, "internet_watchdog")},
+    "name": "Internet Watchdog",
 }
 
 

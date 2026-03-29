@@ -1,6 +1,6 @@
-"""Constants for Connection Watchdog integration."""
+"""Constants for Internet Watchdog integration."""
 
-DOMAIN = "connection_watchdog"
+DOMAIN = "internet_watchdog"
 
 CONF_FRITZBOX_URL = "fritzbox_url"
 CONF_SWITCH_ENTITY = "switch_entity"

@@ -1,4 +1,4 @@
-"""Switch platform for Connection Watchdog — toggle auto-restart."""
+"""Switch platform for Internet Watchdog — toggle auto-restart."""
 
 import logging
 
@@ -14,8 +14,8 @@ from .const import DOMAIN
 log = logging.getLogger(__name__)
 
 DEVICE_INFO = {
-    "identifiers": {(DOMAIN, "connection_watchdog")},
-    "name": "Connection Watchdog",
+    "identifiers": {(DOMAIN, "internet_watchdog")},
+    "name": "Internet Watchdog",
 }
 
 

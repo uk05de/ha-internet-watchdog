@@ -1,4 +1,4 @@
-# Connection Watchdog — CLAUDE.md
+# Internet Watchdog — CLAUDE.md
 
 ## Project
 - HA Custom Integration for monitoring internet/FritzBox connectivity
@@ -21,15 +21,15 @@
 - HA on local network (still reachable when FritzBox hangs)
 
 ## Key Files
-- custom_components/connection_watchdog/__init__.py — WatchdogCoordinator + setup
-- custom_components/connection_watchdog/config_flow.py — Config + options flow
-- custom_components/connection_watchdog/binary_sensor.py — Internet + FritzBox connectivity
-- custom_components/connection_watchdog/sensor.py — Restart count + last restart timestamp
-- custom_components/connection_watchdog/button.py — Manual restart button
-- custom_components/connection_watchdog/switch.py — Auto-restart on/off toggle
-- custom_components/connection_watchdog/const.py — Constants + defaults
-- custom_components/connection_watchdog/strings.json — German UI strings
-- custom_components/connection_watchdog/manifest.json — Integration metadata
+- custom_components/internet_watchdog/__init__.py — WatchdogCoordinator + setup
+- custom_components/internet_watchdog/config_flow.py — Config + options flow
+- custom_components/internet_watchdog/binary_sensor.py — Internet + FritzBox connectivity
+- custom_components/internet_watchdog/sensor.py — Restart count + last restart timestamp
+- custom_components/internet_watchdog/button.py — Manual restart button
+- custom_components/internet_watchdog/switch.py — Auto-restart on/off toggle
+- custom_components/internet_watchdog/const.py — Constants + defaults
+- custom_components/internet_watchdog/strings.json — German UI strings
+- custom_components/internet_watchdog/manifest.json — Integration metadata
 
 ## Entities
 - Binary sensor: Internetverbindung (connectivity, on=connected)
@@ -67,4 +67,4 @@
 - FritzBox check uses HTTP HEAD (ssl=False for local http://)
 - Auto-restart switch state persists via RestoreEntity
 - Restart count persists via RestoreEntity
-- All entities share one device: "Connection Watchdog"
+- All entities share one device: "Internet Watchdog"

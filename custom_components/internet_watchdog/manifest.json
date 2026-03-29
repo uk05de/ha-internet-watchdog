@@ -1,6 +1,6 @@
 {
-  "domain": "connection_watchdog",
-  "name": "Connection Watchdog",
+  "domain": "internet_watchdog",
+  "name": "Internet Watchdog",
   "codeowners": ["@uk05de"],
   "config_flow": true,
   "dependencies": [],

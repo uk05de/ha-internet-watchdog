@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connection Watchdog",
+        "title": "Internet Watchdog",
         "description": "Überwacht die Internetverbindung und startet die FritzBox automatisch neu, wenn keine Verbindung besteht. Internet-Check: TCP zu 8.8.8.8 und 1.1.1.1.",
         "data": {
           "fritzbox_url": "FritzBox URL",
@@ -18,7 +18,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "Connection Watchdog konfigurieren",
+        "title": "Internet Watchdog konfigurieren",
         "data": {
           "fritzbox_url": "FritzBox URL",
           "switch_entity": "Shelly Switch (schaltet FritzBox Strom)",

@@ -1,4 +1,4 @@
-"""Binary sensor platform for Connection Watchdog."""
+"""Binary sensor platform for Internet Watchdog."""
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -11,9 +11,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 
 DEVICE_INFO = {
-    "identifiers": {(DOMAIN, "connection_watchdog")},
-    "name": "Connection Watchdog",
-    "manufacturer": "Connection Watchdog",
+    "identifiers": {(DOMAIN, "internet_watchdog")},
+    "name": "Internet Watchdog",
+    "manufacturer": "Internet Watchdog",
     "model": "Verbindungsüberwachung",
 }
 
